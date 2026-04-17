@@ -84,7 +84,10 @@ button {
   <textarea id="memo" placeholder="髪型・特徴など"></textarea>
   <button class="save" onclick="saveData()">保存</button>
 </div>
-
+<div class="card">
+  <button onclick="exportData()">バックアップ保存</button>
+  <input type="file" id="importFile" onchange="importData(event)">
+</div>
 <div class="card">
   <input type="text" id="search" placeholder="検索..." oninput="displayData()">
 </div>
@@ -105,7 +108,44 @@ function saveData() {
     alert("入力してください");
     return;
   }
+function exportData() {
+  const data = localStorage.getItem(STORAGE_KEY);
 
+  if (!data) {
+    alert("データがありません");
+    return;
+  }
+
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "barber_backup.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      alert("復元しました");
+      displayData();
+    } catch {
+      alert("ファイルが不正です");
+    }
+  };
+
+  reader.readAsText(file);
+}
   const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   data.push({ name, date, memo });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
